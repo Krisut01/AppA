@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+from decouple import config
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +40,17 @@ STATICFILES_DIRS = [
     BASE_DIR / "AppA" / "static",  # Correctly pointing to AppA/static
 ]
 
+
+import environ
+
+# Initialize environment variables
+env = environ.Env()
+environ.Env.read_env()
+
+# Load the encryption key
+ENCRYPTION_KEY = env('ENCRYPTION_KEY')
+
+ENCRYPTION_KEY = config('ENCRYPTION_KEY')
 # You may want to add this if you're deploying to a production server:
 STATIC_ROOT = BASE_DIR / "staticfiles"  # Collects all static files into one directory
 INSTALLED_APPS = [
@@ -53,7 +64,7 @@ INSTALLED_APPS = [
     'users',
     'user_messages',
     'AppA', 
-    'corsheaders',  # CORS headers app
+    'corsheaders',
 ]
 
 # CORS Configuration
@@ -79,6 +90,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'AppA.middleware.EncryptRequestMiddleware',  # Add this line for encrypting requests
+    'AppA.middleware.DecryptResponseMiddleware',  # CORS headers app
 ]
 
 ROOT_URLCONF = 'AppA.urls'

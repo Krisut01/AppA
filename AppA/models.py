@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from cryptography.fernet import Fernet
+from django.conf import settings  # Import settings to use ENCRYPTION_KEY
 
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name="appA_sent_messages", on_delete=models.CASCADE)
@@ -13,20 +15,16 @@ class Message(models.Model):
 
     def save(self, *args, **kwargs):
         if self.content:
-            # Here, you would encrypt the content before saving
-            from cryptography.fernet import Fernet
-            key = b'your-secret-key-here'  # Use a secure key
-            cipher = Fernet(key)
+            # Use the key from settings (loaded from .env)
+            cipher = Fernet(settings.ENCRYPTION_KEY)
             self.encrypted_content = cipher.encrypt(self.content.encode()).decode()
         super().save(*args, **kwargs)
 
-def decrypt_content(self):
+    def decrypt_content(self):
         if self.encrypted_content:
-            # Assuming the encryption is done using Fernet
-            from cryptography.fernet import Fernet
-            key = b'your-secret-key-here'  # Use the same key as in the save method
-            cipher = Fernet(key)
             try:
+                # Use the key from settings (loaded from .env)
+                cipher = Fernet(settings.ENCRYPTION_KEY)
                 return cipher.decrypt(self.encrypted_content.encode()).decode()
             except Exception as e:
                 # Handle decryption errors gracefully
