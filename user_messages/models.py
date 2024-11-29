@@ -14,8 +14,13 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        self.encrypted_content = cipher.encrypt(self.content.encode())
+        # Encrypt content before saving
+        if self.content:
+            self.encrypted_content = cipher.encrypt(self.content.encode()).decode()
         super().save(*args, **kwargs)
 
     def decrypt_content(self):
-        return cipher.decrypt(self.encrypted_content.encode()).decode()
+        if self.encrypted_content:
+            return cipher.decrypt(self.encrypted_content.encode()).decode()
+        else:
+            return ""

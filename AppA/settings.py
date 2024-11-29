@@ -33,9 +33,15 @@ STATICFILES_DIRS = [
 
 ALLOWED_HOSTS = []
 
+STATIC_URL = '/static/'
 
-# Application definition
+# Include static files directories (ensure this path points to the correct static folder)
+STATICFILES_DIRS = [
+    BASE_DIR / "AppA" / "static",  # Correctly pointing to AppA/static
+]
 
+# You may want to add this if you're deploying to a production server:
+STATIC_ROOT = BASE_DIR / "staticfiles"  # Collects all static files into one directory
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,7 +53,15 @@ INSTALLED_APPS = [
     'users',
     'user_messages',
     'AppA', 
+    'corsheaders',  # CORS headers app
 ]
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:8001',  # Allow requests from AppB frontend (running on port 8001)
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Allow credentials (cookies or tokens) if needed
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -55,11 +69,12 @@ REST_FRAMEWORK = {
     ),
 }
 
-
+# Middleware configuration
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    'django.middleware.common.CommonMiddleware',  # CORS should come before this
+    'corsheaders.middleware.CorsMiddleware',     # CORS Middleware
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -87,9 +102,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'AppA.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+# Database configuration (SQLite used for simplicity)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -97,10 +110,7 @@ DATABASES = {
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
+# Password validation settings
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -116,25 +126,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
+# Internationalization settings
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = 'static/'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
