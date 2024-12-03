@@ -9,50 +9,30 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-from decouple import config
+
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-5is4p@v2ave7q0-u0w03dwk=nvaps@!3q+6mp+k9smv*4&5t7v'
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='default-key-for-development')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-import os
+DEBUG = config('DEBUG', default=True, cast=bool)
 
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=[], cast=lambda v: [s.strip() for s in v.split(',')])
+
+# Static files configuration
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+STATICFILES_DIRS = [BASE_DIR / 'AppA' / 'static']
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-ALLOWED_HOSTS = []
+# Encryption key loaded from environment
+ENCRYPTION_KEY = config('ENCRYPTION_KEY', default='default-encryption-key')
 
-STATIC_URL = '/static/'
-
-# Include static files directories (ensure this path points to the correct static folder)
-STATICFILES_DIRS = [
-    BASE_DIR / "AppA" / "static",  # Correctly pointing to AppA/static
-]
-
-
-import environ
-
-# Initialize environment variables
-env = environ.Env()
-environ.Env.read_env()
-
-# Load the encryption key
-ENCRYPTION_KEY = env('ENCRYPTION_KEY')
-
-ENCRYPTION_KEY = config('ENCRYPTION_KEY')
-# You may want to add this if you're deploying to a production server:
-STATIC_ROOT = BASE_DIR / "staticfiles"  # Collects all static files into one directory
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -63,16 +43,25 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'user_messages',
-    'AppA', 
+    'AppA',
     'corsheaders',
+    'channels',
 ]
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+ASGI_APPLICATION = 'AppA.asgi.application'
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:8001',  # Allow requests from AppB frontend (running on port 8001)
-]
-
-CORS_ALLOW_CREDENTIALS = True  # Allow credentials (cookies or tokens) if needed
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://127.0.0.1:8001', cast=lambda v: [s.strip() for s in v.split(',')])
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -84,14 +73,14 @@ REST_FRAMEWORK = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',  # CORS should come before this
-    'corsheaders.middleware.CorsMiddleware',     # CORS Middleware
+    'corsheaders.middleware.CorsMiddleware',  # CORS Middleware
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'AppA.middleware.EncryptRequestMiddleware',  # Add this line for encrypting requests
-    'AppA.middleware.DecryptResponseMiddleware',  # CORS headers app
+    'AppA.middleware.DecryptResponseMiddleware',  # Decrypt responses
 ]
 
 ROOT_URLCONF = 'AppA.urls'
@@ -114,8 +103,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AppA.wsgi.application'
 
-
-# Database configuration (SQLite used for simplicity)
+# Database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -123,7 +111,7 @@ DATABASES = {
     }
 }
 
-# Password validation settings
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -139,14 +127,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization settings
+# Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
